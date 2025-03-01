@@ -1,11 +1,10 @@
 import Navigation from "../Components/Navigation";
 import { FaStar, FaRegStar } from "react-icons/fa";
-import { AiFillHeart, AiOutlineHeart } from "react-icons/ai";
 import { motion, AnimatePresence } from "framer-motion"; // For animations
-
+import Footer from "../Components/Footer";
 function Favorite({ favorites, toggleFavorite }) {
   return (
-    <div className="bg-gradient-to-b from-gray-50 to-gray-100 min-h-screen">
+ <>   <div className="bg-gradient-to-b from-gray-50 to-gray-100 min-h-screen">
       <Navigation />
       <div className="p-8 space-y-8 max-w-4xl mx-auto">
         {favorites.length > 0 ? (
@@ -51,6 +50,8 @@ function Favorite({ favorites, toggleFavorite }) {
         )}
       </div>
     </div>
+<Footer/>
+    </>
   );
 }
 
