@@ -1,115 +1,280 @@
 import { useState, useEffect } from "react";
 import Navigation from "../Components/Navigation";
-import BasicButtons from "../Components/Button";
+import { CiStar } from "react-icons/ci";
+import { FaStar } from "react-icons/fa";
+import { AiOutlineLike, AiFillLike } from "react-icons/ai";
+import { motion, AnimatePresence } from "framer-motion"; // For animations
 
-function Home({ Addfav }) {
-  const [Like, setLike] = useState(0);
-  const [CommentCount, setCommentCount] = useState(0);
-  const [CommentText, setCommentText] = useState("");
-  const [Comments, setComments] = useState([]);
-  const [ShowCommentInput, setShowCommentInput] = useState(false);
-  const [Showcomment, setShowcomment] = useState(false);
+const BASE_URL =
+  "https://newsapi.org/v2/top-headlines?country=us&category=business&apiKey=803d1b2396aa484bb29fcc3c6701821c";
+const LIKE_URL = "https://67c2cae71851890165ad44b0.mockapi.io/likes";
+const COMMENT_URL = "https://67c2cae71851890165ad44b0.mockapi.io/comments";
 
-  const handleCommentSubmit = () => {
-    if (CommentText.trim() !== "") {
-      setComments((prevComments) => [...prevComments, CommentText]);
-      setCommentCount((prevCount) => prevCount + 1);
-      setCommentText("");
-      setShowCommentInput(false);
+function Home({ favorites, toggleFavorite }) {
+  const [likes, setLikes] = useState({});
+  const [comments, setComments] = useState({});
+  const [commentText, setCommentText] = useState("");
+  const [activeArticle, setActiveArticle] = useState(null);
+  const [showCommentInput, setShowCommentInput] = useState({});
+  const [showComments, setShowComments] = useState({});
+  const [news, setNews] = useState([]);
+
+  // Fetch likes for all articles from MockAPI.io
+  const fetchLikes = async () => {
+    try {
+      const response = await fetch(LIKE_URL);
+      const data = await response.json();
+      const likesData = data.reduce((acc, like) => {
+        acc[like.articleId] = like.likes;
+        return acc;
+      }, {});
+      setLikes(likesData);
+    } catch (error) {
+      console.error("Error fetching likes:", error);
     }
   };
 
-  const showstattus = () => {
-    setShowcomment(!Showcomment); // Toggle the comment visibility
+  // Fetch comments for all articles from MockAPI.io
+  const fetchComments = async () => {
+    try {
+      const response = await fetch(COMMENT_URL);
+      const data = await response.json();
+      const commentsData = data.reduce((acc, comment) => {
+        if (!acc[comment.articleId]) {
+          acc[comment.articleId] = [];
+        }
+        acc[comment.articleId].push(comment.comment);
+        return acc;
+      }, {});
+      setComments(commentsData);
+    } catch (error) {
+      console.error("Error fetching comments:", error);
+    }
+  };
+
+  // Fetch news data from API
+  useEffect(() => {
+    fetch(BASE_URL)
+      .then((res) => res.json())
+      .then((data) => setNews(data.articles))
+      .catch((error) => console.error("Error fetching news:", error));
+  }, []);
+
+  // Fetch likes and comments on component mount
+  useEffect(() => {
+    fetchLikes();
+    fetchComments();
+  }, []);
+
+  // Handle Like per article
+  const handleLike = async (articleTitle) => {
+    const newLikes = (likes[articleTitle] || 0) + 1;
+    setLikes((prevLikes) => ({
+      ...prevLikes,
+      [articleTitle]: newLikes,
+    }));
+
+    // Update likes on MockAPI.io
+    try {
+      const response = await fetch(LIKE_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ articleId: articleTitle, likes: newLikes }),
+      });
+      if (!response.ok) {
+        throw new Error("Failed to update likes");
+      }
+    } catch (error) {
+      console.error("Error updating likes:", error);
+    }
+  };
+
+  // Handle Comment Submission
+  const handleCommentSubmit = async (articleTitle) => {
+    if (commentText.trim() !== "") {
+      const newComments = [...(comments[articleTitle] || []), commentText];
+      setComments((prev) => ({
+        ...prev,
+        [articleTitle]: newComments,
+      }));
+      setCommentText(""); // Clear the input field after submission
+      setShowCommentInput((prev) => ({ ...prev, [articleTitle]: false })); // Hide the input field
+
+      // Add comment to MockAPI.io
+      try {
+        const response = await fetch(COMMENT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            articleId: articleTitle,
+            comment: commentText,
+            timestamp: new Date().toISOString(),
+          }),
+        });
+        if (!response.ok) {
+          throw new Error("Failed to add comment");
+        }
+      } catch (error) {
+        console.error("Error adding comment:", error);
+      }
+    }
+  };
+
+  // Toggle comment input field
+  const toggleCommentInput = (articleTitle) => {
+    setShowCommentInput((prev) => ({
+      ...prev,
+      [articleTitle]: !prev[articleTitle],
+    }));
+    setActiveArticle(articleTitle);
+  };
+
+  // Toggle comment visibility
+  const toggleCommentVisibility = (articleTitle) => {
+    setShowComments((prev) => ({
+      ...prev,
+      [articleTitle]: !prev[articleTitle],
+    }));
+  };
+
+  // Handle comment text input
+  const handleWriteComment = (e) => {
+    setCommentText(e.target.value); // Update the comment text state
   };
 
   // Detect Enter key press
   useEffect(() => {
     const handleEnter = (event) => {
-      if (event.key === "Enter" && ShowCommentInput) {
-        handleCommentSubmit();
+      if (
+        event.key === "Enter" &&
+        activeArticle &&
+        showCommentInput[activeArticle]
+      ) {
+        handleCommentSubmit(activeArticle); // Submit the comment
       }
     };
 
-    // Add event listener
     document.addEventListener("keydown", handleEnter);
-
-    // Cleanup event listener
-    return () => {
-      document.removeEventListener("keydown", handleEnter);
-    };
-  }, [CommentText, ShowCommentInput]); // Dependencies
+    return () => document.removeEventListener("keydown", handleEnter);
+  }, [commentText, showCommentInput, activeArticle]);
 
   return (
-    <div>
+    <div className="bg-gradient-to-b from-gray-50 to-gray-100 min-h-screen">
       <Navigation />
-      <div className="p-16 space-y-9">
-        <div className="bg-gray-100 m-auto rounded-lg p-6">
-          <hr />
-          <br />
-          <img className="w-[650px] m-auto" src="/image.jpg" alt="" />
-          <br />
-          <div>
-            <span className="font-bold">Description : </span>
-            This is The interprenership request letter from debirebirhan
-            universsity Lorem ipsum dolor sit amet consectetur, adipisicing
-            elit. Quam, beatae ratione fugiat illo voluptas labore ut
-            repellendus reprehenderit? Corrupti, autem culpa? Voluptatem
-            adipisci, nam sint minus inventore magni porro corporis?
-          </div>
-          <hr />
-          <div className="flex justify-around p-4">
-            <button
-              onClick={() => setLike((prevLike) => prevLike + 1)}
-              className="text-[27px] flex"
-            >
-              ♥️ <h2>{Like}</h2>
-            </button>
-            <button
-              onClick={() => setShowCommentInput(!ShowCommentInput)}
-              className="text-[27px] flex"
-            >
-              💬 <h2>{CommentCount}</h2>
-            </button>
-            <button onClick={Addfav} className="text-[27px]">
-              ⭐
-            </button>
-          </div>
+      <div className="p-8 space-y-8 max-w-4xl mx-auto">
+        {news.map((article, index) => (
+          <motion.div
+            key={index}
+            className="bg-white rounded-xl shadow-lg overflow-hidden"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: index * 0.1 }}
+          >
+            <img
+              src={article.urlToImage}
+              alt={article.title}
+              className="w-full h-64 object-cover"
+            />
+            <div className="p-6">
+              <h2 className="text-2xl font-bold mb-2">{article.title}</h2>
+              <p className="text-gray-600 mb-4">{article.description}</p>
+              <div className="flex justify-between items-center">
+                <div className="flex items-center space-x-4">
+                  {/* Like Button */}
+                  <button
+                    onClick={() => handleLike(article.title)}
+                    className="flex items-center space-x-2 text-gray-600 hover:text-blue-500 transition-colors"
+                  >
+                    {likes[article.title] ? (
+                      <AiFillLike className="text-blue-500 text-2xl" />
+                    ) : (
+                      <AiOutlineLike className="text-2xl" />
+                    )}
+                    <span>{likes[article.title] || 0}</span>
+                  </button>
 
-          {/* Comment Input Section */}
-          {ShowCommentInput && (
-            <div className="mt-4">
-              <textarea
-                className="w-full p-2 border border-gray-300 rounded-lg"
-                placeholder="Write your comment..."
-                value={CommentText}
-                onChange={(e) => setCommentText(e.target.value)}
-              />
-              <button
-                onClick={handleCommentSubmit}
-                className="mt-2 px-4 py-2 bg-blue-500 text-white rounded-lg"
-              >
-                Submit Comment
-              </button>
-            </div>
-          )}
+                  {/* Comment Button */}
+                  <button
+                    onClick={() => toggleCommentInput(article.title)}
+                    className="flex items-center space-x-2 text-gray-600 hover:text-green-500 transition-colors"
+                  >
+                    <span className="text-2xl">💬</span>
+                    <span>{comments[article.title]?.length || 0}</span>
+                  </button>
 
-          {/* Button to Toggle Comments Visibility */}
-          <BasicButtons choice={'text'} handleclick={showstattus}>
-            {Showcomment ? "Hide Comments" : "Show Comments"}
-          </BasicButtons>
-
-          {/* Display Submitted Comments */}
-          {Showcomment && (
-            <div className="mt-4 space-y-2">
-              {Comments.map((comment, index) => (
-                <div key={index} className="p-2 bg-gray-200 rounded-lg">
-                  {comment}
+                  {/* Favorite Button */}
+                  <button
+                    onClick={() => toggleFavorite(article)}
+                    className="text-2xl text-gray-600 hover:text-orange-500 transition-colors"
+                  >
+                    {favorites.some((fav) => fav.title === article.title) ? (
+                      <FaStar className="text-orange-500" />
+                    ) : (
+                      <CiStar />
+                    )}
+                  </button>
                 </div>
-              ))}
+              </div>
+
+              {/* Comment Input Section */}
+              <AnimatePresence>
+                {showCommentInput[article.title] && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="mt-4"
+                  >
+                    <textarea
+                      className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Write your comment..."
+                      value={commentText}
+                      onChange={handleWriteComment}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault(); // Prevent default behavior (e.g., new line)
+                          handleCommentSubmit(article.title);
+                        }
+                      }}
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Toggle Comments Button & Display */}
+              <button
+                onClick={() => toggleCommentVisibility(article.title)}
+                className="mt-4 text-blue-500 hover:text-blue-600 transition-colors"
+              >
+                {showComments[article.title] ? "Hide Comments" : "Show Comments"}
+              </button>
+
+              <AnimatePresence>
+                {showComments[article.title] && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="mt-4 space-y-2"
+                  >
+                    {comments[article.title]?.length > 0 ? (
+                      comments[article.title].map((comment, index) => (
+                        <div
+                          key={index}
+                          className="p-2 bg-gray-100 rounded-lg text-gray-700"
+                        >
+                          {comment}
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-gray-500">No comments yet.</p>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
-          )}
-        </div>
+          </motion.div>
+        ))}
       </div>
     </div>
   );
