@@ -6,9 +6,9 @@ function Footer() {
       <div className="max-w-7xl mx-auto px-8 grid grid-cols-1 md:grid-cols-4 gap-8">
         {/* About Section */}
         <div>
-          <h3 className="text-xl font-bold mb-4">About Us</h3>
+          <h3 className="text-xl font-bold mb-4">About Me</h3>
           <p className="text-gray-400">
-            We are a team of passionate developers and designers creating
+            I am passionate developers and designers creating
             user-friendly and performant web applications.
           </p>
         </div>
@@ -23,17 +23,13 @@ function Footer() {
               </a>
             </li>
             <li>
-              <a href="/about" className="text-gray-400 hover:text-white">
+              <a href="https://portfolio-react-31s6.vercel.app/about" className="text-gray-400 hover:text-white">
                 About
               </a>
             </li>
+           
             <li>
-              <a href="/services" className="text-gray-400 hover:text-white">
-                Services
-              </a>
-            </li>
-            <li>
-              <a href="/contact" className="text-gray-400 hover:text-white">
+              <a href="https://portfolio-react-31s6.vercel.app/contact-me" className="text-gray-400 hover:text-white">
                 Contact
               </a>
             </li>
@@ -42,26 +38,11 @@ function Footer() {
 
         {/* Social Media Links */}
         <div>
-          <h3 className="text-xl font-bold mb-4">Follow Us</h3>
+          <h3 className="text-xl font-bold mb-4">Follow Me</h3>
           <div className="flex space-x-4">
+      
             <a
-              href="https://facebook.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-gray-400 hover:text-white"
-            >
-              <FaFacebook className="text-2xl" />
-            </a>
-            <a
-              href="https://twitter.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-gray-400 hover:text-white"
-            >
-              <FaTwitter className="text-2xl" />
-            </a>
-            <a
-              href="https://instagram.com"
+              href="https://www.instagram.com/fuadseidm07/"
               target="_blank"
               rel="noopener noreferrer"
               className="text-gray-400 hover:text-white"
@@ -69,7 +50,7 @@ function Footer() {
               <FaInstagram className="text-2xl" />
             </a>
             <a
-              href="https://linkedin.com"
+              href="https://www.linkedin.com/in/fuad-seid-8b61322a9/"
               target="_blank"
               rel="noopener noreferrer"
               className="text-gray-400 hover:text-white"
