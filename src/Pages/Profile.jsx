@@ -5,7 +5,13 @@ function Profile() {
       <Navigation />
       <div>
         {" "}
-        <h1 className="text-3xl font-bold text-red-600">Profile</h1>
+        <div className="flex m-4 space-x-4">
+          <img className="w-32 rounded-2xl " src="fuad.jpg" alt="" />
+          <div>
+            <h1>Name : Fuad Seid</h1>
+            <h1> Phone Number : +251907242838 </h1>
+          </div>
+        </div>
       </div>
     </div>
   );

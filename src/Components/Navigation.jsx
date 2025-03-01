@@ -28,13 +28,13 @@ function Navigation() {
             </div>
 
             {/* Profile Link (Rightmost Corner) */}
-            <div className="mt-4 sm:mt-0">
+            <div className="mt-4 rounded-full p-3 bg-black sm:mt-0">
                 <NavLink
                     to="/profile"
                     className={({ isActive }) =>
                         isActive
-                            ? "text-white font-bold bg-blue-600 px-4 py-2 rounded-lg shadow-md transition-all duration-300"
-                            : "text-zinc-100 hover:text-white hover:bg-blue-600 px-4 py-2 rounded-lg transition-all duration-300"
+                            ? "text-white font-bold px-4 py-2 rounded-lg shadow-md transition-all duration-300"
+                            : "text-zinc-100 px-4 py-2 rounded-lg transition-all duration-300"
                     }
                 >
                     Profile
